@@ -1,12 +1,13 @@
 from MQTT import MQTT
 import subprocess
 import threading
+import os
 
 
 class MqttTerminalHost:
     def __init__(self, broker, port=1883):
         self.mqtt = MQTT(broker, port)
-
+        
         self.cmd_topic = "mqtt_terminal/command"
         self.listen_topic = "mqtt_terminal/output"
         self.error = None
@@ -23,23 +24,31 @@ class MqttTerminalHost:
 
     def send_command(self):
         while True:
-            
+            self.command = self.mqtt.MQTT_Message[self.cmd_topic]
             if self.command != []:
-                self.p = subprocess.Popen(self.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                self.out, self.error = self.p.communicate()
-                if self.error is not None and len(self.error) > 0:  
-                    self.mqtt.send("cmd_out_L", self.listen_topic, self.error, qos=2)
+                if self.command.split(' ')[0] == 'cd':
+                    print(len(self.command.split(" ")))
+                    if len(self.command.split(' ')) == 1:
+                        os.chdir("/home/corey/")
+                    else:
+                        os.chdir(self.command.split(' ')[1])
                 else:
-                    self.mqtt.send("cmd_out_L", self.listen_topic, self.out, qos=2)
+                    self.p = subprocess.Popen('exec ' + self.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    self.out, self.error = self.p.communicate()
+                    if self.error is not None and len(self.error) > 0:  
+                        self.mqtt.send("cmd_out_L", self.listen_topic, self.error, qos=2)
+                    else:
+                        self.mqtt.send("cmd_out_L", self.listen_topic, self.out, qos=2)
+                        
 
                 self.mqtt.MQTT_Message[self.cmd_topic] = []
                 
 
     def main(self):
         while True:
-            self.command = self.mqtt.MQTT_Message[self.cmd_topic]
-            if self.command == "Command Timeout":
-                print("kill")
+           
+            if self.mqtt.MQTT_Message[self.cmd_topic] == "Command Timeout":
+                
                 self.p.kill()
                 self.mqtt.MQTT_Message[self.cmd_topic] = []
                 
