@@ -43,7 +43,7 @@ class MqttTerminalHost:
                             
                         self.mqtt.send("cmd_out_L", self.listen_topic, "", qos=2)
                     except Exception as e:
-                        print(e)
+                        #print(e)
                         self.mqtt.send("cmd_out_L", self.listen_topic, str(e), qos=2)
                 else:
                     self.p = subprocess.Popen('exec ' + self.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -67,7 +67,8 @@ class MqttTerminalHost:
                     self.p.kill()
                     self.mqtt.MQTT_Message[self.cmd_topic] = []
         except Exception as e:
-            print(e)
+            pass
+            #print(e)
                 
                 
 
