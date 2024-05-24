@@ -2,6 +2,7 @@ from MQTT import MQTT
 import subprocess
 import threading
 import os
+import numpy as np
 
 
 class MqttTerminalHost:
@@ -15,6 +16,7 @@ class MqttTerminalHost:
         self.out = None
         self.command = []
         self.timeout = False
+        self.pwd = os.getcwd()
         # create a listener
         self.mqtt.createListener("cmd_in_L", self.cmd_topic)
 
@@ -32,14 +34,18 @@ class MqttTerminalHost:
                     try:
                         if len(self.command.split(' ')) == 1:
                             os.chdir(f"/home/{self.user}/")
+                            self.pwd = f"/home/{self.user}/"
                         else:
                             if self.command.split(' ')[1] != '':
                                 if self.command.split(" ")[1] == '~/':
                                     os.chdir(f"/home/{self.user}/")
+                                    self.pwd = f"/home/{self.user}/"
                                 else:
                                     os.chdir(self.command.split(' ')[1])
+                                    self.pwd = self.command.split(' ')[1]
                             else:
                                 os.chdir(f"/home/{self.user}/")
+                                self.pwd = f"/home/{self.user}/"
                             
                         self.mqtt.send("cmd_out_L", self.listen_topic, "", qos=2)
                     except Exception as e:
@@ -48,6 +54,11 @@ class MqttTerminalHost:
                 else:
                     self.p = subprocess.Popen('exec ' + self.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     self.out, self.error = self.p.communicate()
+                    # if self.command.split(' ')[0:2] == 'ls':
+                    #     folder = np.array(os.listdir(self.pwd))
+                    #     allItems = np.array(self.out)
+                        
+                         
                     if self.error is not None and len(self.error) > 0:  
                         self.mqtt.send("cmd_out_L", self.listen_topic, self.error, qos=2)
                     else:

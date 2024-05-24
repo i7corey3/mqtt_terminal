@@ -16,7 +16,7 @@ class MqttTerminal:
 
         # create a client
         self.mqtt.createSender("cmd_in", self.cmd_topic)
-        self.timeout = 1
+        self.timeout = 2
         self.start_time = time.time()
         self.current_time = time.time()
         self.pwd_update = False
@@ -73,7 +73,11 @@ class MqttTerminal:
                     break
             
                 if output != []:
-                    print(output)
+                    if command[0:2] == 'ls':
+                        print(output.replace("\n", '\t'))
+                            
+                    else:
+                        print(output)
                     
                     if self.pwd_update:
                         self.mqtt.send("cmd_in", self.cmd_topic, "pwd", qos=2)
