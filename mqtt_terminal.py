@@ -1,5 +1,8 @@
 from MQTT import MQTT
 import time
+import readline
+from functions import bcolors, MyCompleter
+
 
 class MqttTerminal:
     def __init__(self, broker, port=1883):
@@ -27,14 +30,36 @@ class MqttTerminal:
         self.mqtt.send("cmd_in", self.cmd_topic, "pwd", qos=2)
         time.sleep(0.2)
         self.pwd = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', '')
+        self.mqtt.send("cmd_in", self.cmd_topic, "ls -a", qos=2)
+        time.sleep(0.2)
+        self.fileList = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', ' ').split(" ")
+        self.mqtt.MQTT_Message[self.listen_topic] = []
 
+        self.completer = MyCompleter(self.fileList)
+        readline.set_completer(self.completer.complete)
+        readline.parse_and_bind('tab: complete')
+
+
+    def checkHomeDir(self):
+        home = len(f'/home/{self.name}')
+        
+        if len(self.pwd) > home:
+            self.pwd = self.pwd.replace(f'/home/{self.name}/', '~/')
+        elif len(self.pwd) == home:
+            self.pwd = self.pwd.replace(f'/home/{self.name}', '~/')
+        
+    
     def main(self):
 
-        while True:
         
-            command = input(f"{self.name}@{self.hostname}:{self.pwd}$ ")
-            if command == "cd":
+        while True:
+            self.checkHomeDir()
+
+            command = input(f"{bcolors.BOLD}{bcolors.OKGREEN}{self.name}@{self.hostname}{bcolors.ENDC}:{bcolors.BOLD}{bcolors.OKBLUE}{self.pwd}{bcolors.ENDC}$ ")
+
+            if command[0:2] == "cd":
                 self.pwd_update = True
+
             self.mqtt.send("cmd_in", self.cmd_topic, command, qos=2)
             start_time = time.time()
             while True:
@@ -49,12 +74,19 @@ class MqttTerminal:
             
                 if output != []:
                     print(output)
-                    self.mqtt.MQTT_Message[self.listen_topic] = []
+                    
                     if self.pwd_update:
                         self.mqtt.send("cmd_in", self.cmd_topic, "pwd", qos=2)
+                       
                         time.sleep(0.2)
                         self.pwd = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', '')
+                        self.mqtt.send("cmd_in", self.cmd_topic, "ls -a", qos=2)
+                        time.sleep(0.2)
+                        self.completer.options = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', ' ').split(" ")
+                        readline.set_completer(self.completer.complete)
+                        readline.parse_and_bind('tab: complete')
                         self.pwd_update = False
+                    self.mqtt.MQTT_Message[self.listen_topic] = []
                     break
 
 if __name__ == "__main__":
