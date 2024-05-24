@@ -54,9 +54,7 @@ class MqttTerminalHost:
                         self.mqtt.send("cmd_out_L", self.listen_topic, self.out, qos=2)
                         
 
-                self.mqtt.MQTT_Message[self.cmd_topic] = []
-        
-                
+                self.mqtt.MQTT_Message[self.cmd_topic] = []     
 
     def main(self):
         try:
