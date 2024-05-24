@@ -75,6 +75,7 @@ class MqttTerminal:
                 if output != []:
                     if command[0:2] == 'ls':
                         print(output.replace("\n", '\t'))
+
                             
                     else:
                         print(output)
