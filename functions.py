@@ -28,4 +28,7 @@ class MyCompleter(object):  # Custom completer
             return self.matches[state]
         except IndexError:
             return None
+        
+if __name__ == "__main__":
+    pass
 
