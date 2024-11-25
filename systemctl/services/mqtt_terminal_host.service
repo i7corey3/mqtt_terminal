@@ -1,0 +1,10 @@
+[Unit]
+Description=MQTT terminal host
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/mqtt_host.py
+User=ubuntu
+
+[Install]
+WantedBy=default.target

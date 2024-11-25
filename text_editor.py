@@ -23,6 +23,7 @@ from __future__ import division, print_function
 
 # std imports
 import functools
+import os
 import collections
 
 # local
@@ -282,7 +283,7 @@ class TextEditor:
                 term.fullscreen(), \
                 term.keypad():
             inp = None
-            self.screen = self.open_file("text.txt")
+            self.screen = self.open_file(f"{os.path.dirname(__file__)}/text.txt")
             csr = self.Cursor(0, 0, term)
             while True:
                 self.echo_yx(csr, term.reverse(self.screen.get((csr.y, csr.x), u' ')))

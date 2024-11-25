@@ -1,4 +1,4 @@
-from MQTT import MQTT
+from systemctl.scripts.MQTT import MQTT
 import subprocess
 import threading
 import os
