@@ -1,8 +1,9 @@
-from systemctl.scripts.MQTT import MQTT
+from MQTT import MQTT
 import time
 import readline
 from functions import bcolors, MyCompleter
 from fileHandler import FileHandler
+import sys
 
 
 class MqttTerminal:
@@ -26,16 +27,20 @@ class MqttTerminal:
         self.file = FileHandler("opened_file.txt", self.mqtt, self.cmd_topic, self.listen_topic, self.timeout)
 
         self.mqtt.send("cmd_in", self.cmd_topic, "whoami", qos=2)
-        time.sleep(2)
-        self.name = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', '')
+        time.sleep(self.timeout)
+        try: 
+            self.name = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', '')
+        except:
+            print("Failed to connect to device, make sure the mqtt_host.py script is running on remote computer")
+            sys.exit()
         self.mqtt.send("cmd_in", self.cmd_topic, "hostname", qos=2)
-        time.sleep(2)
+        time.sleep(self.timeout)
         self.hostname = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', '')
         self.mqtt.send("cmd_in", self.cmd_topic, "pwd", qos=2)
-        time.sleep(2)
+        time.sleep(self.timeout)
         self.pwd = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', '')
         self.mqtt.send("cmd_in", self.cmd_topic, "ls -a", qos=2)
-        time.sleep(2)
+        time.sleep(self.timeout)
         self.fileList = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', ' ').split(" ")
         self.mqtt.MQTT_Message[self.listen_topic] = []
 
@@ -76,7 +81,7 @@ class MqttTerminal:
                     current_time = time.time()
                     if current_time - start_time >= self.timeout:
                         self.mqtt.send("cmd_in", self.cmd_topic, "Command Timeout", qos=2)
-                        time.sleep(2)
+                        time.sleep(self.timeout)
                         print("Command Timeout")
                         self.mqtt.MQTT_Message[self.listen_topic] = []
                         break
@@ -92,10 +97,10 @@ class MqttTerminal:
                         if self.pwd_update:
                             self.mqtt.send("cmd_in", self.cmd_topic, "pwd", qos=2)
                         
-                            time.sleep(2)
+                            time.sleep(self.timeout)
                             self.pwd = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', '')
                             self.mqtt.send("cmd_in", self.cmd_topic, "ls -a", qos=2)
-                            time.sleep(2)
+                            time.sleep(self.timeout)
                             self.completer.options = self.mqtt.MQTT_Message[self.listen_topic].replace('\n', ' ').split(" ")
                             readline.set_completer(self.completer.complete)
                             readline.parse_and_bind('tab: complete')
@@ -104,8 +109,8 @@ class MqttTerminal:
                         break
 
 if __name__ == "__main__":
-    # m = MqttTerminal('3.tcp.ngrok.io', 27178)
-    m = MqttTerminal('localhost',1883)
+    m = MqttTerminal('3.tcp.ngrok.io', 27178)
+    # m = MqttTerminal('localhost',1883)
     m.main()
 
                 
