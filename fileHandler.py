@@ -48,7 +48,7 @@ class FileHandler:
                 self.mqtt.MQTT_Message[self.listen_topic] = []
                 break
             if output != []:
-                print(f"File Contents are stored in {self.file}")
+                print(f"File Contents are saved to {self.file}")
                 self.mqtt.MQTT_Message[self.listen_topic] = []
                 break
     
