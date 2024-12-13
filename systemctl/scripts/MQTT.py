@@ -24,7 +24,7 @@ class MQTT():
             print(f"{name} Disconnect")
             self.disconnect = True
 
-        self.MQTT_Clients[name] = mqtt.Client(name)
+        self.MQTT_Clients[name] = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, name)
         self.MQTT_Clients[name].on_connect = clientConnection
         self.MQTT_Clients[name].on_disconnect = on_disconnect
         self.MQTT_Clients[name].connect(self.MQTT_server, port=self.port)
@@ -53,7 +53,7 @@ class MQTT():
         while True:
             try:
                 if not self.stay_disconnected:
-                    self.MQTT_Clients[name] = mqtt.Client(name)
+                    self.MQTT_Clients[name] = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, name)
                     self.MQTT_Clients[name].on_connect = connectionStatus
                     self.MQTT_Clients[name].on_message = messageDecoder
                     self.MQTT_Clients[name].on_disconnect = on_disconnect
@@ -67,6 +67,6 @@ class MQTT():
         self.MQTT_Clients[name].publish(sub, message, qos=qos)
 
     def createListener(self, name, sub):
-        threading.Thread(target=self.startClient, args=(name, sub,)).start()
+        threading.Thread(target=self.startClient, args=(name, sub,), daemon=True).start()
 
     
